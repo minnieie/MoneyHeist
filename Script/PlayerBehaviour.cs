@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public class PlayerBehaviour : MonoBehaviour
-{
+{   
     int score = 5;
     int currentHealth = 10;
     int maxHealth = 10;
@@ -10,49 +10,57 @@ public class PlayerBehaviour : MonoBehaviour
     bool canInteract = false;
 
     CoinBehaviour currentCoin;
+    DoorBehaviour currentDoor;
 
-    // void OnCollisionEnter(Collision collision)
-    // {
+    void OnCollisionEnter(Collision collision)
+    {
 
-    //     if (collision.gameObject.CompareTag("Collectible"))
-    //     {
-    //         score++;
-    //         Debug.Log("Score: " + score);
-    //     }
+        if (collision.gameObject.CompareTag("Collectible"))
+        {
+            score++;
+            Debug.Log("Score: " + score);
+        }
 
-    //     if (collision.gameObject.CompareTag("HealingArea"))
-    //     {
-    //         if (currentHealth < maxHealth)
-    //         {
-    //             ++currentHealth;
-    //             Debug.Log("Current Health: " + currentHealth);
-    //         }
-    //         else if (currentHealth >= maxHealth)
-    //         {
-    //             Debug.Log("Health is already full");
-    //         }
+        if (collision.gameObject.CompareTag("HealingArea"))
+        {
+            if (currentHealth < maxHealth)
+            {
+                ++currentHealth;
+                Debug.Log("Current Health: " + currentHealth);
+            }
+            else if (currentHealth >= maxHealth)
+            {
+                Debug.Log("Health is already full");
+            }
 
-    //     }
+        }
         
-    //      if (collision.gameObject.CompareTag("HazardArea"))
-    //     {
-    //         currentHealth--;
-    //         Debug.Log("Health: " + currentHealth);
-    //         if (currentHealth <= 0)
-    //         {
-    //             Debug.Log("Player is dead");
-    //         }
-    //     }
-    // }
+         if (collision.gameObject.CompareTag("HazardArea"))
+        {
+            currentHealth--;
+            Debug.Log("Health: " + currentHealth);
+            if (currentHealth <= 0)
+            {
+                Debug.Log("Player is dead");
+            }
+        }
+    }
     void OnInteract()
     {
         if (canInteract)
         {
-            Debug.Log("Interacting with object");
-            currentCoin.Collect(this);
-            currentCoin = null;
-            canInteract = false;
-
+            if (currentCoin != null)
+            {
+                Debug.Log("Interacting with coin");
+                currentCoin.Collect(this);
+                currentCoin = null;
+                canInteract = false;
+            }
+            else if (currentDoor != null)
+            {
+                Debug.Log("Interacting with door");
+                currentDoor.interact();
+            }
         }
         // if (canInteract == false)
         // {
@@ -72,6 +80,12 @@ public class PlayerBehaviour : MonoBehaviour
             currentCoin = other.gameObject.GetComponent<CoinBehaviour>();
             canInteract = true;
         }
+        else if (other.CompareTag("Door"))
+        {
+            canInteract = true;
+            currentDoor = other.GetComponent<DoorBehaviour>();
+        } 
+        
     }
     void OnTriggerExit(Collider other)
     {
