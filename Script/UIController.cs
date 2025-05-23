@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class PanelToggle : MonoBehaviour
 {
+    [SerializeField]
+    private SceneController sceneController;
     public GameObject panel;
     public GameObject okayButton;
     public GameObject missionButton;
