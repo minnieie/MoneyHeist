@@ -13,12 +13,11 @@ public class CameraSwitcher : MonoBehaviour
 
     public void SwitchToPlayerCamera()
     {
-        Debug.Log("🎥 Switching to Player Camera");
 
         mainCamera.enabled = false;
         playerCamera.enabled = true;
 
-        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.lockState = CursorLockMode.None;
         Cursor.visible = false;
 
         if (mainCamera.TryGetComponent(out AudioListener mainListener))
@@ -26,5 +25,22 @@ public class CameraSwitcher : MonoBehaviour
 
         if (playerCamera.TryGetComponent(out AudioListener playerListener))
             playerListener.enabled = true;
+    }
+
+    public void SwitchToMainCamera()
+    {
+        Debug.Log("🎥 Switching back to Main Camera");
+
+        playerCamera.enabled = false;
+        mainCamera.enabled = true;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        if (playerCamera.TryGetComponent(out AudioListener playerListener))
+            playerListener.enabled = false;
+
+        if (mainCamera.TryGetComponent(out AudioListener mainListener))
+            mainListener.enabled = true;
     }
 }

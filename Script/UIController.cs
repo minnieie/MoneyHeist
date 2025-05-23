@@ -35,10 +35,6 @@ public class PanelToggle : MonoBehaviour
         {
             Debug.LogWarning("CameraSwitcher reference not assigned!");
         }
-
-        // After switching camera, lock and hide cursor for gameplay
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     public void ShowPanelAndOkayButton()
@@ -49,9 +45,15 @@ public class PanelToggle : MonoBehaviour
         okayButton.SetActive(true);
         missionButton.SetActive(false);
 
-        // Show cursor so user can interact with UI again
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        if (cameraSwitcher != null)
+        {
+            cameraSwitcher.SwitchToMainCamera();  // Unlock cursor and show main camera
+        }
+        else
+        {
+            Debug.LogWarning("CameraSwitcher reference not assigned!");
+        }
+
+        // Cursor visibility handled in SwitchToMainCamera
     }
-    
 }
