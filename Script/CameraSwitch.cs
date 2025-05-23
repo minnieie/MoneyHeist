@@ -9,16 +9,19 @@ public class CameraSwitcher : MonoBehaviour
     {
         mainCamera.enabled = true;
         playerCamera.enabled = false;
+
+        // Ensure cursor visible and unlocked at start (for main camera)
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void SwitchToPlayerCamera()
     {
-
         mainCamera.enabled = false;
         playerCamera.enabled = true;
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.None; // Allow free movement
+        Cursor.visible = true; // Ensure cursor remains visible
 
         if (mainCamera.TryGetComponent(out AudioListener mainListener))
             mainListener.enabled = false;
@@ -29,11 +32,10 @@ public class CameraSwitcher : MonoBehaviour
 
     public void SwitchToMainCamera()
     {
-        Debug.Log("🎥 Switching back to Main Camera");
-
         playerCamera.enabled = false;
         mainCamera.enabled = true;
 
+        // Unlock and show cursor for UI or menu camera
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
