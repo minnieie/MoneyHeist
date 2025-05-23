@@ -1,16 +1,30 @@
 using UnityEngine;
 
-public class CameraSwitch : MonoBehaviour
+public class CameraSwitcher : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public Camera mainCamera;
+    public Camera playerCamera;
+
     void Start()
     {
-        
+        mainCamera.enabled = true;
+        playerCamera.enabled = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SwitchToPlayerCamera()
     {
-        
+        Debug.Log("🎥 Switching to Player Camera");
+
+        mainCamera.enabled = false;
+        playerCamera.enabled = true;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (mainCamera.TryGetComponent(out AudioListener mainListener))
+            mainListener.enabled = false;
+
+        if (playerCamera.TryGetComponent(out AudioListener playerListener))
+            playerListener.enabled = true;
     }
 }

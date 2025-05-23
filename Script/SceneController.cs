@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class SceneController : MonoBehaviour
 {
+    public CameraSwitcher cameraSwitcher;
+
     [SerializeField]
     private float sceneFadeDuration;
 
@@ -20,16 +21,5 @@ public class SceneController : MonoBehaviour
     {
         yield return sceneFade.FadeInCoroutine(sceneFadeDuration);
     }
-
-    public void LoadScene(string sceneName)
-    {
-        StartCoroutine(LoadSceneCoroutine(sceneName));
-    }
     
-    private IEnumerator LoadSceneCoroutine(string sceneName)
-    {
-        yield return sceneFade.FadeOutCoroutine(sceneFadeDuration);
-        UnityEngine.SceneManager.LoadSceneAsync(sceneName);
-        yield return sceneFade.FadeInCoroutine(sceneFadeDuration);
-    }
 }
