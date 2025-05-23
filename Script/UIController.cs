@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PanelToggle : MonoBehaviour
@@ -7,6 +8,8 @@ public class PanelToggle : MonoBehaviour
     public GameObject missionButton;
 
     public CameraSwitcher cameraSwitcher;  // Assign in Inspector
+    public SceneFade sceneFade;            // Drag the "fade" GameObject (with Image) here
+    public float fadeDuration = 1.0f;      // Set your desired fade time in Inspector
 
     void Start()
     {
@@ -14,7 +17,6 @@ public class PanelToggle : MonoBehaviour
         panel.SetActive(true);
         okayButton.SetActive(true);
 
-        // Make sure cursor visible at start (if UI needs interaction)
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -47,13 +49,36 @@ public class PanelToggle : MonoBehaviour
 
         if (cameraSwitcher != null)
         {
-            cameraSwitcher.SwitchToMainCamera();  // Unlock cursor and show main camera
+            cameraSwitcher.SwitchToMainCamera();
         }
         else
         {
             Debug.LogWarning("CameraSwitcher reference not assigned!");
         }
+    }
 
-        // Cursor visibility handled in SwitchToMainCamera
+    // Called when MissionButton is clicked - only fade IN (black → clear)
+    public void OnMissionButtonClicked()
+    {
+        if (sceneFade != null)
+        {
+            StartCoroutine(FadeInOnly());
+        }
+        else
+        {
+            Debug.LogWarning("SceneFade reference not assigned!");
+        }
+    }
+
+    private IEnumerator FadeInOnly()
+    {
+        Debug.Log("Fading in...");
+        yield return sceneFade.FadeInCoroutine(fadeDuration);
+
+        Debug.Log("Fade in complete, continue mission logic...");
+        if (cameraSwitcher != null)
+        {
+            cameraSwitcher.SwitchToPlayerCamera();
+        }
     }
 }

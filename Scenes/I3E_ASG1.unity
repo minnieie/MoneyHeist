@@ -485,6 +485,8 @@ MonoBehaviour:
   okayButton: {fileID: 1632292823}
   missionButton: {fileID: 2139779636}
   cameraSwitcher: {fileID: 861343009}
+  sceneFade: {fileID: 1009224262}
+  fadeDuration: 1
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -967,6 +969,8 @@ MonoBehaviour:
   okayButton: {fileID: 1632292823}
   missionButton: {fileID: 2139779636}
   cameraSwitcher: {fileID: 861343009}
+  sceneFade: {fileID: 1009224262}
+  fadeDuration: 1
 --- !u!1 &1083709127
 GameObject:
   m_ObjectHideFlags: 0
@@ -1550,6 +1554,8 @@ MonoBehaviour:
   okayButton: {fileID: 1632292823}
   missionButton: {fileID: 2139779636}
   cameraSwitcher: {fileID: 861343009}
+  sceneFade: {fileID: 1009224262}
+  fadeDuration: 1
 --- !u!1 &1980181534
 GameObject:
   m_ObjectHideFlags: 0
@@ -1705,6 +1711,8 @@ MonoBehaviour:
   okayButton: {fileID: 1632292823}
   missionButton: {fileID: 2139779636}
   cameraSwitcher: {fileID: 0}
+  sceneFade: {fileID: 0}
+  fadeDuration: 1
 --- !u!1 &2007888579
 GameObject:
   m_ObjectHideFlags: 0
@@ -2217,6 +2225,8 @@ MonoBehaviour:
   okayButton: {fileID: 1632292823}
   missionButton: {fileID: 2139779636}
   cameraSwitcher: {fileID: 861343009}
+  sceneFade: {fileID: 0}
+  fadeDuration: 1
 --- !u!65 &5034115001056893507
 BoxCollider:
   m_ObjectHideFlags: 0
