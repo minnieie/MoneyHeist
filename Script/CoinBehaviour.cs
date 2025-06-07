@@ -4,57 +4,66 @@ public class CoinBehaviour : MonoBehaviour
 {
     [Header("Visuals")]
     [SerializeField] private Material highlightMat;
-    private Material originalMat;
-    private MeshRenderer myMeshRenderer;
+    private MeshRenderer[] meshRenderers;
+    private Material[] originalMats;
 
     [Header("Item Properties")]
     [SerializeField] private int coinValue = 5;
-    [SerializeField] private bool isStolenItem = false; // Check this in Inspector for stolen items (like jewelry)
+    [SerializeField] private bool isStolenItem = false;
 
-    // Called when the player collects the item
+    private void Start()
+    {
+        meshRenderers = GetComponentsInChildren<MeshRenderer>();
+        if (meshRenderers != null && meshRenderers.Length > 0)
+        {
+            originalMats = new Material[meshRenderers.Length];
+            for (int i = 0; i < meshRenderers.Length; i++)
+            {
+                originalMats[i] = meshRenderers[i].material;
+            }
+        }
+        else
+        {
+            Debug.LogWarning("MeshRenderer not found on or under: " + gameObject.name);
+        }
+    }
+
     public void Collect(PlayerBehaviour player)
     {
         if (player != null)
         {
             player.ModifyScore(coinValue);
 
-            // If this item is marked as stolen, notify the player
             if (isStolenItem)
             {
-                player.MarkAsThief(); // You'll implement this method in PlayerBehaviour
+                player.MarkAsThief();
                 Debug.Log("Player has stolen an item!");
             }
 
-            Destroy(gameObject); // Remove the item after collecting
-        }
-    }
-
-    private void Start()
-    {
-        myMeshRenderer = GetComponent<MeshRenderer>();
-        if (myMeshRenderer != null)
-        {
-            originalMat = myMeshRenderer.material;
-        }
-        else
-        {
-            Debug.LogWarning("MeshRenderer not found on: " + gameObject.name);
+            UnHighlight(); // Ensure unhighlight before destruction
+            Destroy(gameObject);
         }
     }
 
     public void Highlight()
     {
-        if (myMeshRenderer != null && highlightMat != null)
+        if (meshRenderers != null && highlightMat != null)
         {
-            myMeshRenderer.material = highlightMat;
+            for (int i = 0; i < meshRenderers.Length; i++)
+            {
+                meshRenderers[i].material = highlightMat;
+            }
         }
     }
 
     public void UnHighlight()
     {
-        if (myMeshRenderer != null && originalMat != null)
+        if (meshRenderers != null && originalMats != null)
         {
-            myMeshRenderer.material = originalMat;
+            for (int i = 0; i < meshRenderers.Length; i++)
+            {
+                meshRenderers[i].material = originalMats[i];
+            }
         }
     }
 }

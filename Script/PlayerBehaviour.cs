@@ -5,14 +5,11 @@ public class PlayerBehaviour : MonoBehaviour
     int score = 5;
     int currentHealth = 10;
     int maxHealth = 10;
-
     int CoinScore = 0;
     bool canInteract = false;
 
-    //Store the current coin and door the player is looking at
-
     [SerializeField]
-    float interactionDistance = 5f;
+    float interactionDistance = 0.5f;
 
     [SerializeField]
     public GameObject projectile;
@@ -23,23 +20,16 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField]
     float fireStrength = 0f;
 
-    //Method to modify the player's score
-    //This method takes an integer amount as a parameter
-    //It adds the amount to the player's score 
-    //This method is public so it can be called from other scripts
-
     CoinBehaviour currentCoin = null;
     DoorBehaviour currentDoor = null;
 
     void OnCollisionEnter(Collision collision)
     {
-
         if (collision.gameObject.CompareTag("Collectible"))
         {
             score++;
             Debug.Log("Score: " + score);
         }
-
         if (collision.gameObject.CompareTag("HealingArea"))
         {
             if (currentHealth < maxHealth)
@@ -47,13 +37,11 @@ public class PlayerBehaviour : MonoBehaviour
                 ++currentHealth;
                 Debug.Log("Current Health: " + currentHealth);
             }
-            else if (currentHealth >= maxHealth)
+            else
             {
                 Debug.Log("Health is already full");
             }
-
         }
-
         if (collision.gameObject.CompareTag("HazardArea"))
         {
             currentHealth--;
@@ -64,6 +52,7 @@ public class PlayerBehaviour : MonoBehaviour
             }
         }
     }
+
     void OnInteract()
     {
         if (canInteract)
@@ -72,6 +61,7 @@ public class PlayerBehaviour : MonoBehaviour
             {
                 Debug.Log("Interacting with coin");
                 currentCoin.Collect(this);
+                currentCoin.UnHighlight();
                 currentCoin = null;
                 canInteract = false;
             }
@@ -81,29 +71,24 @@ public class PlayerBehaviour : MonoBehaviour
                 currentDoor.interact();
             }
         }
-        // if (canInteract == false)
-        // {
-        //      Debug.Log("Nothing to interact with");
-        // }
     }
+
     public void ModifyScore(int amount)
     {
         CoinScore += amount;
         Debug.Log("Score: " + CoinScore);
     }
+
     void OnTriggerEnter(Collider other)
     {
-        // Check if the player is looking at a collectible or door
         if (other.gameObject.CompareTag("Collectible"))
         {
-            // Set the canInteract flag to true
-            // Get the CoinBehaviour component from the detected  object
             Debug.Log("Player is looking at " + other.gameObject.name);
             currentCoin = other.gameObject.GetComponent<CoinBehaviour>();
             canInteract = true;
             if (currentCoin != null)
             {
-                currentCoin.Highlight();// Highlight the coin
+                currentCoin.Highlight();
             }
         }
         else if (other.CompareTag("Door"))
@@ -111,19 +96,15 @@ public class PlayerBehaviour : MonoBehaviour
             canInteract = true;
             currentDoor = other.GetComponent<DoorBehaviour>();
         }
-
     }
-    // Trigger callback when the player exits the trigger collider
+
     void OnTriggerExit(Collider other)
     {
         if (other.gameObject.CompareTag("Collectible"))
         {
-            // Set the canInteract flag to false
-            // Set the currentCoin to null
-            // This prevents the player from interacting with the coin
             if (currentCoin != null)
             {
-                currentCoin.UnHighlight(); // Unhighlight the coin
+                currentCoin.UnHighlight();
             }
             currentCoin = null;
             canInteract = false;
@@ -132,57 +113,56 @@ public class PlayerBehaviour : MonoBehaviour
 
     void OnFire()
     {
-        // Instantiate a projectile at the spawn point
-        // Store the spawned projectile to the "newProjectile" variable
         GameObject newProjectile = Instantiate(projectile, spawnPoint.position, spawnPoint.rotation);
-
-        // Create a new Vector3 variable called fireForce
-        //Set it to the forward direction of the spawn point multiplied by the fireStrength variable
-        // This will determine the direction and speed of the projectile
         Vector3 fireForce = spawnPoint.forward * fireStrength;
-
-        //Get the Rigidbody component of the new projectile
-        // Add a force to the projectile defined by the fireForce variable
         newProjectile.GetComponent<Rigidbody>().AddForce(fireForce);
     }
 
     void Update()
     {
-        RaycastHit hitInfo;
+        RaycastHit[] hits = Physics.RaycastAll(spawnPoint.position, spawnPoint.forward, interactionDistance);
         Debug.DrawRay(spawnPoint.position, spawnPoint.forward * interactionDistance, Color.green);
-        if (Physics.Raycast(spawnPoint.position, spawnPoint.forward, out hitInfo, interactionDistance))
+
+        if (hits.Length > 0)
         {
-            //Debug.Log ("Raycast hit: " + hitInfo.collider.gameObject.name);
-            if (hitInfo.collider.gameObject.CompareTag("Collectible"))
+            RaycastHit closestHit = hits[0]; // Assume first hit is closest
+            float closestDistance = Vector3.Distance(transform.position, closestHit.collider.transform.position);
+
+            foreach (RaycastHit hit in hits)
             {
-                if (currentCoin != null)
+                float distance = Vector3.Distance(transform.position, hit.collider.transform.position);
+                if (distance < closestDistance)
                 {
-                    currentCoin.UnHighlight(); // Unhighlight the previous coin
+                    closestHit = hit;
+                    closestDistance = distance;
                 }
-                //Set the canInteract flag to true
-                // Get the CoinBehaviour component from the detected object
-                canInteract = true;
-                currentCoin = hitInfo.collider.gameObject.GetComponent<CoinBehaviour>();
+            }
+
+            if (closestHit.collider.gameObject.CompareTag("Collectible"))
+            {
+                if (currentCoin != null && currentCoin.gameObject != closestHit.collider.gameObject)
+                {
+                    currentCoin.UnHighlight();
+                }
+
+                currentCoin = closestHit.collider.gameObject.GetComponent<CoinBehaviour>();
                 if (currentCoin != null)
                 {
-                    currentCoin.Highlight(); // Highlight the coin
+                    currentCoin.Highlight();
+                    canInteract = true;
                 }
             }
         }
-        else if (currentCoin != null)
+        else if (currentCoin != null) // If nothing is detected, unhighlight
         {
-            // If the raycast does not hit a collectible, unhighlight the current coin
             currentCoin.UnHighlight();
-            currentCoin = null; // Reset the current coin
+            currentCoin = null;
+            canInteract = false;
         }
-
     }
 
-    // Add the MarkAsThief method outside of Update()
     public void MarkAsThief()
     {
-        // If you have a variable isStealing, make sure it's declared in the class
-        // bool isStealing = false; // Uncomment and move to class fields if needed
         Debug.Log("You have committed theft!");
     }
 }
