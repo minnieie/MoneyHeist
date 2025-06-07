@@ -60,8 +60,59 @@ PrefabInstance:
       propertyPath: m_Name
       value: SM_scepter Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: e87960c74a4b7c347999919a311a26c7, type: 3}
+      propertyPath: m_TagString
+      value: Collectible
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e87960c74a4b7c347999919a311a26c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7414487569150118520}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e87960c74a4b7c347999919a311a26c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4029948642793907643}
   m_SourcePrefab: {fileID: 100100000, guid: e87960c74a4b7c347999919a311a26c7, type: 3}
+--- !u!1 &7993630389793538231 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: e87960c74a4b7c347999919a311a26c7, type: 3}
+  m_PrefabInstance: {fileID: 7074730247390002662}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &7414487569150118520
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7993630389793538231}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.05779924, y: 0.050043046, z: 0.5748533}
+  m_Center: {x: 0, y: 0.023466308, z: -0.26745152}
+--- !u!114 &4029948642793907643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7993630389793538231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28e9cb8ae313cd24fbf3fa225d5014ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  highlightMat: {fileID: 2100000, guid: d9780a5c605027647a22290b91acfc11, type: 2}
+  coinValue: 10
+  isStolenItem: 1

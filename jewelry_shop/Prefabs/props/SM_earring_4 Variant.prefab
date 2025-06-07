@@ -64,8 +64,35 @@ PrefabInstance:
       propertyPath: m_Name
       value: SM_earring_4 Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 26bd9e7fbb2b28146955e493a0ee6f6a, type: 3}
+      propertyPath: m_TagString
+      value: Collectible
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 26bd9e7fbb2b28146955e493a0ee6f6a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2958916853311059500}
   m_SourcePrefab: {fileID: 100100000, guid: 26bd9e7fbb2b28146955e493a0ee6f6a, type: 3}
+--- !u!1 &7029969501972911468 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 26bd9e7fbb2b28146955e493a0ee6f6a, type: 3}
+  m_PrefabInstance: {fileID: 7876252408716847165}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2958916853311059500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7029969501972911468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28e9cb8ae313cd24fbf3fa225d5014ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  highlightMat: {fileID: 2100000, guid: d9780a5c605027647a22290b91acfc11, type: 2}
+  coinValue: 3
+  isStolenItem: 1

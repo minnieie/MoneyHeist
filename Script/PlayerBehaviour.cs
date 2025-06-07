@@ -23,6 +23,10 @@ public class PlayerBehaviour : MonoBehaviour
     CoinBehaviour currentCoin = null;
     DoorBehaviour currentDoor = null;
 
+    // Added for hazard damage cooldown control
+    private float hazardDamageCooldown = 1f; // seconds between damage ticks
+    private float lastHazardDamageTime = 0f;
+
     void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Collectible"))
@@ -53,6 +57,58 @@ public class PlayerBehaviour : MonoBehaviour
         }
     }
 
+    // Added: handle trigger-based hazard damage
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("HazardArea"))
+        {
+            ApplyHazardDamage();
+            lastHazardDamageTime = Time.time;
+        }
+
+        if (other.gameObject.CompareTag("Collectible"))
+        {
+            Debug.Log("Player is looking at " + other.gameObject.name);
+            currentCoin = other.gameObject.GetComponent<CoinBehaviour>();
+            canInteract = true;
+            if (currentCoin != null)
+            {
+                currentCoin.Highlight();
+            }
+        }
+        else if (other.CompareTag("Door"))
+        {
+            canInteract = true;
+            currentDoor = other.GetComponent<DoorBehaviour>();
+        }
+    }
+
+    // Added: repeatedly damage player while inside hazard trigger
+    void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("HazardArea"))
+        {
+            if (Time.time - lastHazardDamageTime >= hazardDamageCooldown)
+            {
+                ApplyHazardDamage();
+                lastHazardDamageTime = Time.time;
+            }
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag("Collectible"))
+        {
+            if (currentCoin != null)
+            {
+                currentCoin.UnHighlight();
+            }
+            currentCoin = null;
+            canInteract = false;
+        }
+    }
+
     void OnInteract()
     {
         if (canInteract)
@@ -77,38 +133,6 @@ public class PlayerBehaviour : MonoBehaviour
     {
         CoinScore += amount;
         Debug.Log("Score: " + CoinScore);
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.CompareTag("Collectible"))
-        {
-            Debug.Log("Player is looking at " + other.gameObject.name);
-            currentCoin = other.gameObject.GetComponent<CoinBehaviour>();
-            canInteract = true;
-            if (currentCoin != null)
-            {
-                currentCoin.Highlight();
-            }
-        }
-        else if (other.CompareTag("Door"))
-        {
-            canInteract = true;
-            currentDoor = other.GetComponent<DoorBehaviour>();
-        }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.CompareTag("Collectible"))
-        {
-            if (currentCoin != null)
-            {
-                currentCoin.UnHighlight();
-            }
-            currentCoin = null;
-            canInteract = false;
-        }
     }
 
     void OnFire()
@@ -164,5 +188,17 @@ public class PlayerBehaviour : MonoBehaviour
     public void MarkAsThief()
     {
         Debug.Log("You have committed theft!");
+    }
+
+    // Helper method for damage application
+    void ApplyHazardDamage()
+    {
+        currentHealth--;
+        Debug.Log("Health: " + currentHealth);
+        if (currentHealth <= 0)
+        {
+            Debug.Log("Player is dead");
+            // Handle death here if needed
+        }
     }
 }
