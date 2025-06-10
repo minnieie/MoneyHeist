@@ -26,7 +26,7 @@ public class PanelToggle : MonoBehaviour
 
     [Header("Settings")]
     public float fadeDuration = 1.0f;
-    private static bool isRestarting = false;
+    public static bool isRestarting = false;
 
     [Header("Theft Timer")]
     public TextMeshProUGUI theftTimerText;
@@ -53,7 +53,6 @@ public class PanelToggle : MonoBehaviour
             panel.SetActive(false);
             okayButton.SetActive(false);
             missionButton.SetActive(true);
-
             ResetGameState();
             isRestarting = false;
         }
@@ -96,7 +95,10 @@ public class PanelToggle : MonoBehaviour
     private void ResetGameState()
     {
         if (playerBehaviour != null)
-            playerBehaviour.ResetPlayer();
+            playerBehaviour.ResetPlayer(); // Explicitly reset the player
+
+        if (cameraSwitcher != null)
+            cameraSwitcher.SwitchToPlayerCamera(); // Reset camera properly
 
         if (scoreText != null)
         {
@@ -112,15 +114,18 @@ public class PanelToggle : MonoBehaviour
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToPlayerCamera();
 
-        currentTheftTime = theftDuration;
+        currentTheftTime = theftDuration; // Ensure timer resets properly
         isTheftTimerRunning = false;
 
         if (theftTimerText != null)
             theftTimerText.enabled = false;
 
-        // Ensure BGM is stopped when resetting game state
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false); // Explicitly hide game over panel
+
         StopGameOverBGM();
     }
+
     public void HidePanelAndButton()
     {
         PlayButtonClickSound();
@@ -128,8 +133,11 @@ public class PanelToggle : MonoBehaviour
         okayButton.SetActive(false);
         missionButton.SetActive(true);
 
-        if (scoreText != null) scoreText.enabled = true;
-        if (timeText != null) scoreText.enabled = true;
+        if (scoreText != null)
+            scoreText.enabled = true;
+
+        if (timeText != null)
+            scoreText.enabled = true;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToPlayerCamera();
@@ -142,8 +150,11 @@ public class PanelToggle : MonoBehaviour
         okayButton.SetActive(true);
         missionButton.SetActive(false);
 
-        if (scoreText != null) scoreText.enabled = false;
-        if (timeText != null) scoreText.enabled = false;
+        if (scoreText != null)
+            scoreText.enabled = false;
+
+        if (timeText != null)
+            scoreText.enabled = false;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToMainCamera();
@@ -220,13 +231,31 @@ public class PanelToggle : MonoBehaviour
 
     public void ShowGameOverScreen()
     {
-        PlayGameOverBGM(); // Changed from PlayGameOverSound to PlayGameOverBGM
+        Debug.Log("Restarting... Player health is now: " + playerBehaviour.currentHealth);
+        if (playerBehaviour != null)
+        {
+            Debug.Log("Game Over triggered! Current health: " + playerBehaviour.currentHealth);
+        }
+        else
+        {
+            Debug.LogWarning("PlayerBehaviour reference is missing!");
+        }
 
+        PlayGameOverBGM();
         missionButton.SetActive(false);
         okayButton.SetActive(false);
-        if (scoreText != null) scoreText.enabled = false;
-        if (timeText != null) scoreText.enabled = false;
-        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+
+        if (scoreText != null)
+            scoreText.enabled = false;
+
+        if (timeText != null)
+            timeText.enabled = false;
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+
+        StopTheftTimer();
+        isTheftTimerRunning = false;
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -238,6 +267,35 @@ public class PanelToggle : MonoBehaviour
         {
             bgmAudioSource.clip = gameOverBGM;
             bgmAudioSource.Play();
+        }
+
+        // Delay respawn for a better flow
+        StartCoroutine(RespawnPlayerAfterDelay(2.0f));
+    }
+
+    private IEnumerator RespawnPlayerAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (playerBehaviour != null && playerBehaviour.playerSpawnPoint != null)
+        {
+            playerBehaviour.transform.position = playerBehaviour.playerSpawnPoint.position;
+            Physics.SyncTransforms(); // Ensures Unity updates physics properly
+            playerBehaviour.ResetPlayer();
+
+            // ✅ Hide the game over panel & reset UI
+            if (gameOverPanel != null)
+                gameOverPanel.SetActive(false);
+
+            if (panel != null)
+                panel.SetActive(false); // Ensures UI doesn't stay stuck
+
+            if (okayButton != null)
+                okayButton.SetActive(false); // Hides unnecessary button
+
+            if (missionButton != null)
+                missionButton.SetActive(true); // Ensure mission button visibility
+
+            Debug.Log("Player has respawned!");
         }
     }
 
@@ -254,6 +312,7 @@ public class PanelToggle : MonoBehaviour
             audioSource.PlayOneShot(buttonClickSound);
         }
     }
+
     private void PlayGameOverBGM()
     {
         if (bgmAudioSource != null && gameOverBGM != null)
@@ -265,13 +324,25 @@ public class PanelToggle : MonoBehaviour
 
     public void OnRestartButtonPressed()
     {
-        PlayButtonClickSound();
-        // Stop BGM before restarting
+        isRestarting = false; // Prevent full scene reload
         StopGameOverBGM();
-        isRestarting = true;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        // Respawn the player instead of restarting the scene
+        if (playerBehaviour != null && playerBehaviour.playerSpawnPoint != null)
+        {
+            playerBehaviour.transform.position = playerBehaviour.playerSpawnPoint.position;
+            Physics.SyncTransforms(); // Ensure Unity updates physics properly
+            playerBehaviour.ResetPlayer();
+            HideGameOverPanel();
+            Debug.Log("Player has respawned!");
+        }
+        else
+        {
+            Debug.LogWarning("Player or spawn point is missing, restarting scene instead...");
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // Fallback: reload scene if respawn fails
+        }
     }
-    
+
     private void StopGameOverBGM()
     {
         if (bgmAudioSource != null && bgmAudioSource.isPlaying)
