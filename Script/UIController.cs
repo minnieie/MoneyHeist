@@ -16,26 +16,49 @@ public class PanelToggle : MonoBehaviour
     [Header("References")]
     public CameraSwitcher cameraSwitcher;
     public SceneFade sceneFade;
+    public PlayerBehaviour playerBehaviour;
+
+    [Header("Audio")]
+    public AudioClip buttonClickSound;
+    public AudioClip gameOverBGM; // Changed to BGM
+    private AudioSource audioSource;
+    private AudioSource bgmAudioSource; // Separate audio source for BGM
 
     [Header("Settings")]
     public float fadeDuration = 1.0f;
-
-    // Flag to check if restarting from Game Over
     private static bool isRestarting = false;
+
+    [Header("Theft Timer")]
+    public TextMeshProUGUI theftTimerText;
+    public float theftDuration = 30f;
+    private float currentTheftTime;
+    public bool isTheftTimerRunning = false;
 
     void Start()
     {
+        // Set up button sound audio source
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        // Set up BGM audio source
+        bgmAudioSource = gameObject.AddComponent<AudioSource>();
+        bgmAudioSource.loop = true;
+        bgmAudioSource.playOnAwake = false;
+
         if (isRestarting)
         {
-            // Skip intro panel logic on restart
             panel.SetActive(false);
             okayButton.SetActive(false);
             missionButton.SetActive(true);
+
+            ResetGameState();
             isRestarting = false;
         }
         else
         {
-            // Initial UI state for fresh start
             panel.SetActive(true);
             okayButton.SetActive(true);
             missionButton.SetActive(false);
@@ -53,58 +76,89 @@ public class PanelToggle : MonoBehaviour
         }
 
         if (gameOverPanel != null)
+        {
             gameOverPanel.SetActive(false);
+        }
+
+        currentTheftTime = theftDuration;
+        isTheftTimerRunning = false;
+
+        if (theftTimerText != null)
+        {
+            theftTimerText.enabled = false;
+            theftTimerText.color = Color.white;
+        }
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 
+    private void ResetGameState()
+    {
+        if (playerBehaviour != null)
+            playerBehaviour.ResetPlayer();
+
+        if (scoreText != null)
+        {
+            scoreText.enabled = true;
+            UpdateScoreDisplay(0);
+        }
+
+        if (timeText != null)
+        {
+            timeText.enabled = true;
+        }
+
+        if (cameraSwitcher != null)
+            cameraSwitcher.SwitchToPlayerCamera();
+
+        currentTheftTime = theftDuration;
+        isTheftTimerRunning = false;
+
+        if (theftTimerText != null)
+            theftTimerText.enabled = false;
+
+        // Ensure BGM is stopped when resetting game state
+        StopGameOverBGM();
+    }
     public void HidePanelAndButton()
     {
-        Debug.Log("HidePanelAndButton called");
+        PlayButtonClickSound();
         panel.SetActive(false);
         okayButton.SetActive(false);
         missionButton.SetActive(true);
 
         if (scoreText != null) scoreText.enabled = true;
-        if (timeText != null) timeText.enabled = true;
+        if (timeText != null) scoreText.enabled = true;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToPlayerCamera();
-        else
-            Debug.LogWarning("CameraSwitcher reference not assigned!");
     }
 
     public void ShowPanelAndOkayButton()
     {
-        Debug.Log("ShowPanelAndOkayButton called");
+        PlayButtonClickSound();
         panel.SetActive(true);
         okayButton.SetActive(true);
         missionButton.SetActive(false);
 
         if (scoreText != null) scoreText.enabled = false;
-        if (timeText != null) timeText.enabled = false;
+        if (timeText != null) scoreText.enabled = false;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToMainCamera();
-        else
-            Debug.LogWarning("CameraSwitcher reference not assigned!");
     }
 
     public void OnMissionButtonClicked()
     {
+        PlayButtonClickSound();
         if (sceneFade != null)
             StartCoroutine(FadeInOnly());
-        else
-            Debug.LogWarning("SceneFade reference not assigned!");
     }
 
     private IEnumerator FadeInOnly()
     {
-        Debug.Log("Fading in...");
         yield return sceneFade.FadeInCoroutine(fadeDuration);
-        Debug.Log("Fade in complete, continue mission logic...");
-
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToPlayerCamera();
     }
@@ -115,29 +169,76 @@ public class PanelToggle : MonoBehaviour
             scoreText.text = "SCORE: " + newScore.ToString();
     }
 
+    public void StartTheftTimer()
+    {
+        currentTheftTime = theftDuration;
+        isTheftTimerRunning = true;
+        if (theftTimerText != null)
+            theftTimerText.enabled = true;
+    }
+
+    public void StopTheftTimer()
+    {
+        isTheftTimerRunning = false;
+        if (theftTimerText != null)
+            theftTimerText.enabled = false;
+    }
+
+    public void UpdateTheftTimerDisplay(float timeRemaining)
+    {
+        if (theftTimerText != null)
+        {
+            theftTimerText.text = Mathf.CeilToInt(timeRemaining) + "s";
+            theftTimerText.enabled = true;
+
+            if (timeRemaining < 10f)
+                theftTimerText.color = Color.red;
+            else if (timeRemaining < 20f)
+                theftTimerText.color = Color.yellow;
+            else
+                theftTimerText.color = Color.white;
+        }
+    }
+
     void Update()
     {
         if (timeText != null && timeText.enabled && SunRotates.Instance != null)
             timeText.text = SunRotates.Instance.GetFormattedTime();
+
+        if (isTheftTimerRunning)
+        {
+            currentTheftTime -= Time.deltaTime;
+            UpdateTheftTimerDisplay(currentTheftTime);
+
+            if (currentTheftTime <= 0)
+            {
+                StopTheftTimer();
+                ShowGameOverScreen();
+            }
+        }
     }
 
     public void ShowGameOverScreen()
     {
-        Debug.Log("Game Over!");
+        PlayGameOverBGM(); // Changed from PlayGameOverSound to PlayGameOverBGM
 
         missionButton.SetActive(false);
         okayButton.SetActive(false);
         if (scoreText != null) scoreText.enabled = false;
-        if (timeText != null) timeText.enabled = false;
-
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(true);
+        if (timeText != null) scoreText.enabled = false;
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToMainCamera();
+
+        if (bgmAudioSource != null && gameOverBGM != null && !bgmAudioSource.isPlaying)
+        {
+            bgmAudioSource.clip = gameOverBGM;
+            bgmAudioSource.Play();
+        }
     }
 
     public void HideGameOverPanel()
@@ -146,10 +247,38 @@ public class PanelToggle : MonoBehaviour
             gameOverPanel.SetActive(false);
     }
 
+    private void PlayButtonClickSound()
+    {
+        if (audioSource != null && buttonClickSound != null)
+        {
+            audioSource.PlayOneShot(buttonClickSound);
+        }
+    }
+    private void PlayGameOverBGM()
+    {
+        if (bgmAudioSource != null && gameOverBGM != null)
+        {
+            bgmAudioSource.clip = gameOverBGM;
+            bgmAudioSource.Play();
+        }
+    }
+
     public void OnRestartButtonPressed()
     {
-        // Set restart flag so Start() logic skips intro
+        PlayButtonClickSound();
+        // Stop BGM before restarting
+        StopGameOverBGM();
         isRestarting = true;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    
+    private void StopGameOverBGM()
+    {
+        if (bgmAudioSource != null && bgmAudioSource.isPlaying)
+        {
+            bgmAudioSource.Stop();
+        }
     }
 }
+
+
