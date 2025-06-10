@@ -1,7 +1,10 @@
 using UnityEngine;
 
 public class CoinBehaviour : MonoBehaviour
-{
+{   
+    [Header("Audio")]
+    private AudioSource sharedAudioSource;
+    
     [Header("Visuals")]
     [SerializeField] private Material highlightMat;
     private MeshRenderer[] meshRenderers;
@@ -9,7 +12,7 @@ public class CoinBehaviour : MonoBehaviour
 
     [Header("Item Properties")]
     [SerializeField] private int coinValue = 5;
-    [SerializeField] private bool isStolenItem = false;
+    [SerializeField] public bool isStolenItem = false;
 
     private void Start()
     {
@@ -22,10 +25,8 @@ public class CoinBehaviour : MonoBehaviour
                 originalMats[i] = meshRenderers[i].material;
             }
         }
-        else
-        {
-            Debug.LogWarning("MeshRenderer not found on or under: " + gameObject.name);
-        }
+
+        sharedAudioSource = GameObject.Find("Collectible").GetComponent<AudioSource>();
     }
 
     public void Collect(PlayerBehaviour player)
@@ -36,8 +37,11 @@ public class CoinBehaviour : MonoBehaviour
 
             if (isStolenItem)
             {
-                player.MarkAsThief();
                 Debug.Log("Player has stolen an item!");
+            }
+            if (sharedAudioSource != null)
+            {
+                sharedAudioSource.Play();
             }
 
             UnHighlight(); // Ensure unhighlight before destruction
@@ -67,3 +71,4 @@ public class CoinBehaviour : MonoBehaviour
         }
     }
 }
+
