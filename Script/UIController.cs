@@ -2,6 +2,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
+
 
 public class PanelToggle : MonoBehaviour
 {
@@ -13,6 +15,17 @@ public class PanelToggle : MonoBehaviour
     public GameObject restartButton; // Added for restart functionality
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI timeText;
+
+    public TextMeshProUGUI healthText;
+
+
+    public int currentHealthCount = 0;
+
+    [SerializeField]
+    Image healthTrackingIcon;
+
+    [SerializeField]
+    Sprite[] healthTrackingSprites;
 
     [Header("References")]
     public CameraSwitcher cameraSwitcher;
@@ -37,8 +50,19 @@ public class PanelToggle : MonoBehaviour
     private float currentTheftTime;
     public bool isTheftTimerRunning = false;
 
+    public Sprite[] HealthTrackingSprites { get => healthTrackingSprites; set => healthTrackingSprites = value; }
+
     void Start()
     {   
+        if (playerBehaviour != null)
+        {
+            currentHealthCount = playerBehaviour.currentHealth;
+            UpdateHealthSprite(currentHealthCount); 
+        }
+        else
+        {
+            Debug.LogWarning("PlayerBehaviour reference not assigned!");
+        }
 
         // Set up button sound audio source
         audioSource = GetComponent<AudioSource>();
@@ -146,6 +170,20 @@ public class PanelToggle : MonoBehaviour
             bgmAudioSource.Stop();
 }
     }
+    public void UpdateHealthSprite(int health)
+    {
+        int maxHealth = 10;
+        int spriteCount = healthTrackingSprites.Length;
+
+        // Normalize health to sprite range
+        int spriteIndex = Mathf.FloorToInt((float)health / maxHealth * (spriteCount - 1));
+        spriteIndex = Mathf.Clamp(spriteIndex, 0, spriteCount - 1);
+
+        healthTrackingIcon.sprite = healthTrackingSprites[spriteIndex];
+
+        if (healthText != null)
+            healthText.text = health.ToString();
+    }
 
     public void HidePanelAndButton()
     {
@@ -247,6 +285,17 @@ public class PanelToggle : MonoBehaviour
             {
                 StopTheftTimer();
                 ShowGameOverScreen();
+            }
+        }
+
+        // Update health tracking icon
+        if (playerBehaviour != null)
+        {
+            int currentHealth = playerBehaviour.currentHealth;
+            if (currentHealth != currentHealthCount)
+            {
+                currentHealthCount = currentHealth;
+                UpdateHealthSprite(currentHealthCount);
             }
         }
     }
