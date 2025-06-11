@@ -1,7 +1,8 @@
 using UnityEngine;
 
 public class PlayerBehaviour : MonoBehaviour
-{
+{   
+    public CoinBehaviour currentCoin = null;
     public int score = 0;
     public int currentHealth = 10;
     public int maxHealth = 10;
@@ -10,23 +11,27 @@ public class PlayerBehaviour : MonoBehaviour
     public bool isStealing = false;
     public float stealTimer = 0f;
 
-    public bool isDead = false; // <== ADD THIS
-
-
-    [SerializeField] private float interactionDistance = 1.5f;
-    [SerializeField] private GameObject projectile;
-    [SerializeField] private Transform spawnPoint;
-    [SerializeField] private float fireStrength = 0f;
-
+    public bool isDead = false; 
     private float hazardDamageCooldown = 1f;
     private float lastHazardDamageTime = 0f;
 
     private float stealResetTimer = 3f;
 
+
+    [SerializeField]
+    private float interactionDistance = 1.5f;
+
+    [SerializeField]
+    private GameObject projectile;
+
+    [SerializeField]
+    private Transform spawnPoint;
+
+    [SerializeField]
+    private float fireStrength = 0f;
+
     [SerializeField]
     private PanelToggle panelToggle;
-
-    public CoinBehaviour currentCoin = null;
 
     [SerializeField]
     public Transform playerSpawnPoint;
@@ -34,7 +39,7 @@ public class PlayerBehaviour : MonoBehaviour
     private void RespawnPlayer()
     {
         if (playerSpawnPoint != null)
-        {   
+        {
             transform.position = playerSpawnPoint.position;
             ResetPlayer();
             Debug.Log("Player has respawned!");
@@ -225,7 +230,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (isDead) return; // ✅ Prevent damage if dead
         currentHealth = Mathf.Max(currentHealth - 1, 0);
-        Debug.Log("Health: " + currentHealth);
+        panelToggle?.UpdateHealthSprite(currentHealth);
 
         if (currentHealth <= 0)
         {
