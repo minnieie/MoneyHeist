@@ -20,9 +20,11 @@ public class PanelToggle : MonoBehaviour
 
     [Header("Audio")]
     public AudioClip buttonClickSound;
-    public AudioClip gameOverBGM; // Changed to BGM
+    public AudioClip gameOverBGM;
+    public AudioClip normalBGMClip; // 🎵 ADD THIS
+
     private AudioSource audioSource;
-    private AudioSource bgmAudioSource; // Separate audio source for BGM
+    private AudioSource bgmAudioSource;
 
     [Header("Settings")]
     public float fadeDuration = 1.0f;
@@ -35,7 +37,8 @@ public class PanelToggle : MonoBehaviour
     public bool isTheftTimerRunning = false;
 
     void Start()
-    {
+    {   
+
         // Set up button sound audio source
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
@@ -47,6 +50,17 @@ public class PanelToggle : MonoBehaviour
         bgmAudioSource = gameObject.AddComponent<AudioSource>();
         bgmAudioSource.loop = true;
         bgmAudioSource.playOnAwake = false;
+
+                if (normalBGMClip != null)
+        {
+            bgmAudioSource.clip = normalBGMClip;
+            bgmAudioSource.Play();
+            Debug.Log("Normal BGM started at launch.");
+        }
+        else
+        {
+            Debug.LogWarning("Normal BGM clip is not assigned in Inspector!");
+        }
 
         if (isRestarting)
         {
@@ -93,7 +107,8 @@ public class PanelToggle : MonoBehaviour
     }
 
     private void ResetGameState()
-    {
+    {   
+
         if (playerBehaviour != null)
             playerBehaviour.ResetPlayer(); // Explicitly reset the player
 
@@ -123,7 +138,11 @@ public class PanelToggle : MonoBehaviour
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false); // Explicitly hide game over panel
 
-        StopGameOverBGM();
+        Debug.Log("Stopping Game Over BGM.");
+        if (bgmAudioSource != null && bgmAudioSource.isPlaying)
+        {
+            bgmAudioSource.Stop();
+}
     }
 
     public void HidePanelAndButton()
@@ -297,6 +316,14 @@ public class PanelToggle : MonoBehaviour
 
             Debug.Log("Player has respawned!");
         }
+        if (bgmAudioSource != null && normalBGMClip != null)
+        {
+            bgmAudioSource.Stop();
+            bgmAudioSource.clip = normalBGMClip;
+            bgmAudioSource.Play();
+            Debug.Log("Normal BGM restarted after respawn.");
+        }
+
     }
 
     public void HideGameOverPanel()
@@ -315,17 +342,27 @@ public class PanelToggle : MonoBehaviour
 
     private void PlayGameOverBGM()
     {
-        if (bgmAudioSource != null && gameOverBGM != null)
+        if (bgmAudioSource != null)
         {
+            bgmAudioSource.Stop(); // 🔇 Stop any current BGM
             bgmAudioSource.clip = gameOverBGM;
-            bgmAudioSource.Play();
+
+            if (gameOverBGM != null)
+            {
+                bgmAudioSource.Play();
+                Debug.Log("Playing Game Over BGM.");
+            }
+            else
+            {
+                Debug.LogWarning("GameOver BGM clip is missing!");
+            }
         }
     }
+
 
     public void OnRestartButtonPressed()
     {
         isRestarting = false; // Prevent full scene reload
-        StopGameOverBGM();
 
         // Respawn the player instead of restarting the scene
         if (playerBehaviour != null && playerBehaviour.playerSpawnPoint != null)
@@ -343,13 +380,5 @@ public class PanelToggle : MonoBehaviour
         }
     }
 
-    private void StopGameOverBGM()
-    {
-        if (bgmAudioSource != null && bgmAudioSource.isPlaying)
-        {
-            bgmAudioSource.Stop();
-        }
-    }
 }
-
 
