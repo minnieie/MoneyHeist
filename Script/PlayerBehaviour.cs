@@ -36,19 +36,21 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField]
     public Transform playerSpawnPoint;
 
+
     private void RespawnPlayer()
     {
         if (playerSpawnPoint != null)
         {
             transform.position = playerSpawnPoint.position;
             ResetPlayer();
+            ResetAllNPCs(); 
+            ResetAllCoins(); 
             Debug.Log("Player has respawned!");
         }
     }
 
     public void ResetPlayer()
     {
-        Debug.Log("ResetPlayer called");
         currentHealth = maxHealth;
         coinScore = 0;
         score = 0;
@@ -59,7 +61,31 @@ public class PlayerBehaviour : MonoBehaviour
         isDead = false; // ✅ Allow damage again
 
         panelToggle?.UpdateScoreDisplay(0);
+    }   
+    public void ResetAllNPCs()
+    {
+        // Find all NPCs in the scene
+        NPC[] allNPCs = FindObjectsByType<NPC>(FindObjectsSortMode.None);
+        
+        foreach (NPC npc in allNPCs)
+        {
+            npc.ResetNPC(); // Call the ResetNPC method on each NPC
+        }
+        
+        Debug.Log($"Reset {allNPCs.Length} NPCs");
     }
+    public void ResetAllCoins()
+    {
+        // ✅ Include inactive coins in the search
+        CoinBehaviour[] allCoins = FindObjectsOfType<CoinBehaviour>(true); // true = include inactive
+        
+        Debug.Log($"Found {allCoins.Length} coins to reset");
+        
+        foreach (CoinBehaviour coin in allCoins)
+        {
+            coin.ResetCoin();
+        }
+}
 
 
     private void OnCollisionEnter(Collision collision)
