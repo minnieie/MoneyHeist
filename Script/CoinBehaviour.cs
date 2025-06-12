@@ -1,10 +1,10 @@
 using UnityEngine;
 
 public class CoinBehaviour : MonoBehaviour
-{   
+{
     [Header("Audio")]
     private AudioSource sharedAudioSource;
-    
+
     [Header("Visuals")]
     [SerializeField] private Material highlightMat;
     private MeshRenderer[] meshRenderers;
@@ -14,8 +14,14 @@ public class CoinBehaviour : MonoBehaviour
     [SerializeField] private int coinValue = 5;
     [SerializeField] public bool isStolenItem = false;
 
+    private Vector3 initialPosition;
+    private Quaternion initialRotation;
+
     private void Start()
-    {
+    {   
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+
         meshRenderers = GetComponentsInChildren<MeshRenderer>();
         if (meshRenderers != null && meshRenderers.Length > 0)
         {
@@ -34,18 +40,13 @@ public class CoinBehaviour : MonoBehaviour
         if (player != null)
         {
             player.ModifyScore(coinValue);
+            
+            if (isStolenItem) Debug.Log("Player has stolen an item!");
+            
+            if (sharedAudioSource != null) sharedAudioSource.Play();
 
-            if (isStolenItem)
-            {
-                Debug.Log("Player has stolen an item!");
-            }
-            if (sharedAudioSource != null)
-            {
-                sharedAudioSource.Play();
-            }
-
-            UnHighlight(); // Ensure unhighlight before destruction
-            Destroy(gameObject);
+            UnHighlight();
+            gameObject.SetActive(false); // ✅ Only deactivate, don't destroy
         }
     }
 
@@ -70,5 +71,19 @@ public class CoinBehaviour : MonoBehaviour
             }
         }
     }
+    public void ResetCoin()
+    {
+        // ✅ Ensure the coin is active before resetting
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true); // Reactivate first
+        
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+        UnHighlight();
+        
+        Debug.Log($"{gameObject.name} reset to {initialPosition}");
+    }
+
 }
+
 
