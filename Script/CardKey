@@ -1,0 +1,56 @@
+using UnityEngine;
+
+public class CardKey : MonoBehaviour
+{
+    private Renderer cardRenderer;
+
+    [Header("Colors")]
+    [SerializeField] private Color defaultColor = Color.red;
+    [SerializeField] private Color highlightColor = Color.blue;
+
+    private void Start()
+    {
+        cardRenderer = GetComponentInChildren<Renderer>();
+
+        if (cardRenderer != null)
+        {
+            Debug.Log("Materials count: " + cardRenderer.materials.Length);
+            for (int i = 0; i < cardRenderer.materials.Length; i++)
+            {
+                Debug.Log($"Material {i} name: {cardRenderer.materials[i].name}");
+            }
+            SetMainColor(defaultColor); 
+        }
+        else
+        {
+            Debug.LogWarning(" No Renderer found in children!");
+        }
+    }
+
+    public void Highlight()
+    {
+        SetMainColor(highlightColor);
+    }
+
+    public void UnHighlight()
+    {
+        SetMainColor(defaultColor);
+    }
+
+    private void SetMainColor(Color color)
+    {
+        if (cardRenderer == null) return;
+
+        Material[] materials = cardRenderer.materials;
+
+        if (materials.Length > 0 && materials[0] != null)
+        {
+            materials[0].color = color; 
+            cardRenderer.materials = materials; 
+        }
+        else
+        {
+            Debug.LogWarning("Element 0 material missing!");
+        }
+    }
+}
