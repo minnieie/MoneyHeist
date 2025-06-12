@@ -2,47 +2,46 @@ using UnityEngine;
 
 public class CameraSwitcher : MonoBehaviour
 {
+    [Header("Camera References")]
     public Camera mainCamera;
     public Camera playerCamera;
 
     void Start()
     {
-        mainCamera.enabled = true;
-        playerCamera.enabled = false;
-
-        // Ensure cursor visible and unlocked at start (for main camera)
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        // No automatic switching — let PanelToggle handle camera logic explicitly
+        SetCursorState(true);
+        ManageAudioListeners(mainCamera, playerCamera); // Assume mainCamera is active by default
     }
 
     public void SwitchToPlayerCamera()
     {
-        mainCamera.enabled = false;
-        playerCamera.enabled = true;
+        if (mainCamera != null) mainCamera.enabled = false;
+        if (playerCamera != null) playerCamera.enabled = true;
 
-        Cursor.lockState = CursorLockMode.None; // Allow free movement
-        Cursor.visible = true; // Ensure cursor remains visible
-
-        if (mainCamera.TryGetComponent(out AudioListener mainListener))
-            mainListener.enabled = false;
-
-        if (playerCamera.TryGetComponent(out AudioListener playerListener))
-            playerListener.enabled = true;
+        ManageAudioListeners(playerCamera, mainCamera);
     }
 
     public void SwitchToMainCamera()
     {
-        playerCamera.enabled = false;
-        mainCamera.enabled = true;
+        if (playerCamera != null) playerCamera.enabled = false;
+        if (mainCamera != null) mainCamera.enabled = true;
 
-        // Unlock and show cursor for UI or menu camera
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        SetCursorState(true); // Unlock cursor for menus
+        ManageAudioListeners(mainCamera, playerCamera);
+    }
 
-        if (playerCamera.TryGetComponent(out AudioListener playerListener))
-            playerListener.enabled = false;
+    private void ManageAudioListeners(Camera activeCamera, Camera inactiveCamera)
+    {
+        if (inactiveCamera != null && inactiveCamera.TryGetComponent(out AudioListener inactiveListener))
+            inactiveListener.enabled = false;
 
-        if (mainCamera.TryGetComponent(out AudioListener mainListener))
-            mainListener.enabled = true;
+        if (activeCamera != null && activeCamera.TryGetComponent(out AudioListener activeListener))
+            activeListener.enabled = true;
+    }
+
+    private void SetCursorState(bool visible)
+    {
+        Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = visible;
     }
 }
