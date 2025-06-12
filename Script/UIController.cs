@@ -53,11 +53,15 @@ public class PanelToggle : MonoBehaviour
     public Sprite[] HealthTrackingSprites { get => healthTrackingSprites; set => healthTrackingSprites = value; }
 
     void Start()
-    {   
+    {
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         if (playerBehaviour != null)
         {
             currentHealthCount = playerBehaviour.currentHealth;
-            UpdateHealthSprite(currentHealthCount); 
+            UpdateHealthSprite(currentHealthCount);
         }
         else
         {
@@ -76,7 +80,7 @@ public class PanelToggle : MonoBehaviour
         bgmAudioSource.loop = true;
         bgmAudioSource.playOnAwake = false;
 
-                if (normalBGMClip != null)
+        if (normalBGMClip != null)
         {
             bgmAudioSource.clip = normalBGMClip;
             bgmAudioSource.Play();
@@ -127,8 +131,10 @@ public class PanelToggle : MonoBehaviour
             theftTimerText.color = Color.white;
         }
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        if (healthTrackingIcon != null)
+        {
+            healthTrackingIcon.enabled = !panel.activeSelf;
+        }
     }
 
     private void ResetGameState()
@@ -151,6 +157,9 @@ public class PanelToggle : MonoBehaviour
             timeText.enabled = true;
         }
 
+        if (healthTrackingIcon != null)
+            healthTrackingIcon.enabled = true;
+
         currentTheftTime = theftDuration; // Ensure timer resets properly
         isTheftTimerRunning = false;
 
@@ -163,13 +172,12 @@ public class PanelToggle : MonoBehaviour
         if (restartButton != null)
             restartButton.SetActive(false);
 
-
         Debug.Log("Stopping Game Over BGM.");
         if (bgmAudioSource != null && bgmAudioSource.isPlaying)
         {
             bgmAudioSource.Stop();
 }
-    }
+        }
     public void UpdateHealthSprite(int health)
     {
         int maxHealth = 10;
@@ -185,12 +193,15 @@ public class PanelToggle : MonoBehaviour
             healthText.text = health.ToString();
     }
 
+
     public void HidePanelAndButton()
     {
         PlayButtonClickSound();
         panel.SetActive(false);
         okayButton.SetActive(false);
         missionButton.SetActive(true);
+        healthTrackingIcon.gameObject.SetActive(true);
+
 
         if (scoreText != null)
             scoreText.enabled = true;
@@ -200,6 +211,12 @@ public class PanelToggle : MonoBehaviour
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToPlayerCamera();
+        
+        if (healthTrackingIcon != null)
+            healthTrackingIcon.enabled = true;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void ShowPanelAndOkayButton()
@@ -208,22 +225,43 @@ public class PanelToggle : MonoBehaviour
         panel.SetActive(true);
         okayButton.SetActive(true);
         missionButton.SetActive(false);
+        healthTrackingIcon.gameObject.SetActive(false);
+
 
         if (scoreText != null)
             scoreText.enabled = false;
 
         if (timeText != null)
             timeText.enabled = false;
+        
+        if (healthTrackingIcon != null)
+            healthTrackingIcon.enabled = false;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToMainCamera();
+        
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
     }
 
     public void OnMissionButtonClicked()
     {
+        Debug.Log("Mission button clicked!");
         PlayButtonClickSound();
+        
         if (sceneFade != null)
             StartCoroutine(FadeInOnly());
+    }
+
+    public void OnOkayButtonClicked()
+    {
+        PlayButtonClickSound();
+
+        if (cameraSwitcher != null)
+            cameraSwitcher.SwitchToPlayerCamera();
+
+        HidePanelAndButton();
     }
 
     private IEnumerator FadeInOnly()
@@ -298,6 +336,8 @@ public class PanelToggle : MonoBehaviour
                 UpdateHealthSprite(currentHealthCount);
             }
         }
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void ShowGameOverScreen()
@@ -321,6 +361,9 @@ public class PanelToggle : MonoBehaviour
 
         if (timeText != null)
             timeText.enabled = false;
+        
+        if (healthTrackingIcon != null)
+        healthTrackingIcon.enabled = false;
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
@@ -343,12 +386,7 @@ public class PanelToggle : MonoBehaviour
             bgmAudioSource.clip = gameOverBGM;
             bgmAudioSource.Play();
         }
-
-
     }
-
-
-
     public void HideGameOverPanel()
     {
         if (gameOverPanel != null)
@@ -401,6 +439,13 @@ public class PanelToggle : MonoBehaviour
             if (scoreText != null) scoreText.enabled = true;
             if (timeText != null) timeText.enabled = true;
 
+            if (healthTrackingIcon != null)
+            {
+                healthTrackingIcon.gameObject.SetActive(true);
+                healthTrackingIcon.enabled = true;
+                UpdateHealthSprite(playerBehaviour.currentHealth);
+            }
+
             // Switch back to normal BGM
             if (bgmAudioSource != null && normalBGMClip != null)
             {
@@ -422,5 +467,7 @@ public class PanelToggle : MonoBehaviour
         }
     }
 
+
+}
 
 }
