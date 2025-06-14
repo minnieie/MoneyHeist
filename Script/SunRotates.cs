@@ -50,16 +50,16 @@ public class SunRotates : MonoBehaviour
         transform.rotation = Quaternion.Euler(sunRotationX, 0f, 0f);
     }
 
-    // ✅ Get the current time
+    //  Get the current time
     public float GetCurrentTime()
     {
         return currentTime;
     }
 
-    // ✅ Is it night? (between 7PM and 6AM)
+    // Is it night? (between 7PM and 6AM)
     public bool IsNight => currentTime >= 19f || currentTime < 7f;
 
-    // ✅ Get time as a 12-hour formatted string
+    //  Get time as a 12-hour formatted string
     public string GetFormattedTime()
     {
         int totalMinutes = Mathf.FloorToInt(currentTime * 60f);
