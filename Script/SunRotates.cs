@@ -2,48 +2,74 @@ using UnityEngine;
 
 public class SunRotates : MonoBehaviour
 {
+    [Header("Time Settings")]
     [Range(0f, 24f)]
-    public float currentTime; // The current time in the simulation (0 to 24 hours)
+    public float currentTime = 6f; // Start at 6AM by default
 
-    public float dayLengthInSeconds; // Defines how many seconds a full day lasts in the simulation
+    public float dayLengthInSeconds = 600f; // Defines how many seconds a full 24-hour day lasts in the simulation
+
+    public static SunRotates Instance; // Singleton instance
+
+    void Awake()
+    {
+        // Set up singleton reference
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
-        // You can initialize currentTime here if needed, or leave it to be set through the Inspector
         if (dayLengthInSeconds <= 0)
         {
-            Debug.LogError("dayLengthInSeconds must be greater than zero to avoid division by zero errors.");
             return;
         }
     }
 
     void Update()
     {
-        // Ensure that dayLengthInSeconds is properly set to avoid division errors
         if (dayLengthInSeconds <= 0)
         {
-            Debug.LogWarning("dayLengthInSeconds is not set correctly. Please assign a positive value.");
-            return; // Prevent execution if an invalid value is detected
+            return;
         }
 
-        // Calculate the speed at which the sun should rotate based on the length of a full day
-        float rotationSpeed = 24f / dayLengthInSeconds; 
-
-        // Update the current time, ensuring it progresses over time
+        float rotationSpeed = 24f / dayLengthInSeconds;
         currentTime += Time.deltaTime * rotationSpeed;
 
-        // If the currentTime exceeds 24 hours, reset it so the cycle continues
         if (currentTime >= 24f)
         {
-            currentTime -= 24f; // Instead of resetting to zero, subtract 24 to maintain natural continuity
+            currentTime -= 24f;
         }
 
-        // Apply the calculated rotation based on the currentTime
-        // The X-axis rotation controls the progression of the sun position during the day
-        float sunRotationX = currentTime * 15f; // Since 360 degrees divided by 24 hours = 15 degrees per hour
+        float sunRotationX = currentTime * 15f; // 15 degrees per hour = 360°/24
         transform.rotation = Quaternion.Euler(sunRotationX, 0f, 0f);
+    }
 
-        // Optional Debugging
-        Debug.Log("Current Time: " + currentTime.ToString("F2") + " hours | Rotation: " + sunRotationX.ToString("F2") + " degrees");
+    // ✅ Get the current time
+    public float GetCurrentTime()
+    {
+        return currentTime;
+    }
+
+    // ✅ Is it night? (between 7PM and 6AM)
+    public bool IsNight => currentTime >= 19f || currentTime < 7f;
+
+    // ✅ Get time as a 12-hour formatted string
+    public string GetFormattedTime()
+    {
+        int totalMinutes = Mathf.FloorToInt(currentTime * 60f);
+        int hours = (totalMinutes / 60) % 24;
+        int minutes = totalMinutes % 60;
+
+        string period = hours >= 12 ? "PM" : "AM";
+        int displayHour = hours % 12;
+        if (displayHour == 0) displayHour = 12;
+
+        return $"{displayHour}:{minutes:D2} {period}";
     }
 }
