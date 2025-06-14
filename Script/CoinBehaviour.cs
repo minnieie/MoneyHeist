@@ -16,12 +16,16 @@ public class CoinBehaviour : MonoBehaviour
 
     private Vector3 initialPosition;
     private Quaternion initialRotation;
+    private bool isCollected = false;
 
+    [Header("NPC Reference")]
+    public NPC npcReference;
     private void Start()
-    {   
+    {
         initialPosition = transform.position;
         initialRotation = transform.rotation;
 
+        // Get all mesh renderers for highlighting
         meshRenderers = GetComponentsInChildren<MeshRenderer>();
         if (meshRenderers != null && meshRenderers.Length > 0)
         {
@@ -32,21 +36,46 @@ public class CoinBehaviour : MonoBehaviour
             }
         }
 
+        // Get audio source
         sharedAudioSource = GameObject.Find("Collectible").GetComponent<AudioSource>();
+
+
     }
+
+
 
     public void Collect(PlayerBehaviour player)
     {
-        if (player != null)
+        if (player != null && !isCollected)
         {
-            player.ModifyScore(coinValue);
-            
-            if (isStolenItem) Debug.Log("Player has stolen an item!");
-            
-            if (sharedAudioSource != null) sharedAudioSource.Play();
+            isCollected = true;
 
+            // Update player score
+            player.ModifyScore(coinValue);
+
+            // Handle stolen item logic
+            if (isStolenItem)
+            {
+                Debug.Log("Player has stolen an item!");
+                if (!SunRotates.Instance.IsNight)
+                {
+                    player.isStealing = true;
+                    player.stealTimer = 0f;
+
+                    if (player.panelToggle != null && !player.panelToggle.isTheftTimerRunning)
+                        player.panelToggle.StartTheftTimer();
+                }
+            }
+
+            // Play sound
+            if (sharedAudioSource != null)
+                sharedAudioSource.Play();
+
+            // Visual feedback
             UnHighlight();
-            gameObject.SetActive(false); // ✅ Only deactivate, don't destroy
+
+            // Deactivate instead of destroy
+            gameObject.SetActive(false);
         }
     }
 
@@ -71,19 +100,21 @@ public class CoinBehaviour : MonoBehaviour
             }
         }
     }
+
     public void ResetCoin()
     {
-        // ✅ Ensure the coin is active before resetting
-        if (!gameObject.activeSelf)
-            gameObject.SetActive(true); // Reactivate first
-        
+        gameObject.SetActive(true); // Force reactivate
         transform.position = initialPosition;
         transform.rotation = initialRotation;
         UnHighlight();
-        
-        Debug.Log($"{gameObject.name} reset to {initialPosition}");
+        isCollected = false;
+}
+    public void SetNPCReference(NPC npc)
+    {
+        npcReference = npc;
     }
 
 }
+
 
 
