@@ -8,18 +8,24 @@ using UnityEngine.UI;
 public class PanelToggle : MonoBehaviour
 {
     [Header("UI Elements")]
-    public GameObject panel;
+    public GameObject panel; //mission panel
     public GameObject okayButton;
     public GameObject missionButton;
     public GameObject gameOverPanel;
-    public GameObject restartButton; // Added for restart functionality
+    public GameObject restartButton;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI timeText;
+    public GameObject interactPromptUI;
+    public GameObject messagePanel; // For Lock Door messages
+    public float displayTime = 2f; // How long the message stays visible
 
     public TextMeshProUGUI healthText;
-
+    public TextMeshProUGUI collectibleCountText;
+    public GameObject congratsPanel;
 
     public int currentHealthCount = 0;
+    private CollectibleManager collectibleManager;
+
 
     [SerializeField]
     Image healthTrackingIcon;
@@ -35,7 +41,8 @@ public class PanelToggle : MonoBehaviour
     [Header("Audio")]
     public AudioClip buttonClickSound;
     public AudioClip gameOverBGM;
-    public AudioClip normalBGMClip; // 🎵 ADD THIS
+    public AudioClip normalBGMClip;
+    public AudioClip congratsBGM;
 
     private AudioSource audioSource;
     private AudioSource bgmAudioSource;
@@ -46,7 +53,7 @@ public class PanelToggle : MonoBehaviour
 
     [Header("Theft Timer")]
     public TextMeshProUGUI theftTimerText;
-    public float theftDuration = 30f;
+    public float theftDuration = 180f;
     private float currentTheftTime;
     public bool isTheftTimerRunning = false;
 
@@ -57,6 +64,15 @@ public class PanelToggle : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        // Updated initialization
+        collectibleManager = FindAnyObjectByType<CollectibleManager>();
+        if (collectibleManager != null)
+        {
+            collectibleManager.OnCollectibleCountChanged += UpdateCollectibleUI;
+            // Force immediate UI sync
+            UpdateCollectibleUI(collectibleManager.collectedCount, collectibleManager.totalCollectibles);
+        }
 
         if (playerBehaviour != null)
         {
@@ -84,7 +100,6 @@ public class PanelToggle : MonoBehaviour
         {
             bgmAudioSource.clip = normalBGMClip;
             bgmAudioSource.Play();
-            Debug.Log("Normal BGM started at launch.");
         }
         else
         {
@@ -122,6 +137,11 @@ public class PanelToggle : MonoBehaviour
             gameOverPanel.SetActive(false);
         }
 
+        if (collectibleCountText != null)
+        {
+            collectibleCountText.enabled = !panel.activeSelf;
+        }
+
         currentTheftTime = theftDuration;
         isTheftTimerRunning = false;
 
@@ -135,10 +155,23 @@ public class PanelToggle : MonoBehaviour
         {
             healthTrackingIcon.enabled = !panel.activeSelf;
         }
+        
+        if (messagePanel != null)
+        {
+            messagePanel.SetActive(false); // Ensure panel is hidden at start
+        }
+    }
+    private void OnDestroy()
+    {
+        if (collectibleManager != null)
+        {
+            collectibleManager.OnCollectibleCountChanged -= UpdateCollectibleUI;
+        }
     }
 
+
     private void ResetGameState()
-    {   
+    {
 
         if (playerBehaviour != null)
             playerBehaviour.ResetPlayer(); // Explicitly reset the player
@@ -156,6 +189,10 @@ public class PanelToggle : MonoBehaviour
         {
             timeText.enabled = true;
         }
+        if (collectibleCountText != null)
+        {
+            collectibleCountText.enabled = true;
+        }
 
         if (healthTrackingIcon != null)
             healthTrackingIcon.enabled = true;
@@ -168,7 +205,7 @@ public class PanelToggle : MonoBehaviour
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false); // Explicitly hide game over panel
-        
+
         if (restartButton != null)
             restartButton.SetActive(false);
 
@@ -176,8 +213,8 @@ public class PanelToggle : MonoBehaviour
         if (bgmAudioSource != null && bgmAudioSource.isPlaying)
         {
             bgmAudioSource.Stop();
-}
         }
+    }
     public void UpdateHealthSprite(int health)
     {
         int maxHealth = 10;
@@ -206,12 +243,15 @@ public class PanelToggle : MonoBehaviour
         if (scoreText != null)
             scoreText.enabled = true;
 
+        if (collectibleCountText != null)
+            collectibleCountText.enabled = true;
+
         if (timeText != null)
             timeText.enabled = true;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToPlayerCamera();
-        
+
         if (healthTrackingIcon != null)
             healthTrackingIcon.enabled = true;
 
@@ -233,13 +273,16 @@ public class PanelToggle : MonoBehaviour
 
         if (timeText != null)
             timeText.enabled = false;
-        
+
+        if (collectibleCountText != null)
+            collectibleCountText.enabled = false;
+
         if (healthTrackingIcon != null)
             healthTrackingIcon.enabled = false;
 
         if (cameraSwitcher != null)
             cameraSwitcher.SwitchToMainCamera();
-        
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -249,7 +292,7 @@ public class PanelToggle : MonoBehaviour
     {
         Debug.Log("Mission button clicked!");
         PlayButtonClickSound();
-        
+
         if (sceneFade != null)
             StartCoroutine(FadeInOnly());
     }
@@ -277,20 +320,29 @@ public class PanelToggle : MonoBehaviour
             scoreText.text = "SCORE: " + newScore.ToString();
 
     }
-
-    public void StartTheftTimer()
+    public void StartTheftTimer(bool forceRestart = false)
     {
+        // Don't restart if already running unless forced
+        if (isTheftTimerRunning && !forceRestart) return;
+
         currentTheftTime = theftDuration;
         isTheftTimerRunning = true;
-        if (theftTimerText != null)
-            theftTimerText.enabled = true;
-    }
 
+        if (theftTimerText != null)
+        {
+            theftTimerText.enabled = true;
+            UpdateTheftTimerDisplay(currentTheftTime);
+        }
+    }
     public void StopTheftTimer()
     {
         isTheftTimerRunning = false;
+
         if (theftTimerText != null)
+        {
             theftTimerText.enabled = false;
+            theftTimerText.text = "";
+        }
     }
 
     public void UpdateTheftTimerDisplay(float timeRemaining)
@@ -361,13 +413,16 @@ public class PanelToggle : MonoBehaviour
 
         if (timeText != null)
             timeText.enabled = false;
-        
+
+        if (collectibleCountText != null)
+            collectibleCountText.enabled = false;
+
         if (healthTrackingIcon != null)
-        healthTrackingIcon.enabled = false;
+            healthTrackingIcon.enabled = false;
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
-        
+
         if (restartButton != null)
             restartButton.SetActive(true);
 
@@ -423,51 +478,148 @@ public class PanelToggle : MonoBehaviour
 
     public void OnRestartButtonPressed()
     {
-        isRestarting = false;
+        PlayButtonClickSound(); // Always good to have audio feedback
 
+        if (congratsPanel != null && congratsPanel.activeSelf)
+        {
+            congratsPanel.SetActive(false);
+        }
+
+        // Reset the game state properly
         if (playerBehaviour != null && playerBehaviour.playerSpawnPoint != null)
         {
+            // 1. Reset player position and physics
             playerBehaviour.transform.position = playerBehaviour.playerSpawnPoint.position;
             Physics.SyncTransforms();
-            playerBehaviour.ResetPlayer();
-            HideGameOverPanel();
 
-            // Reset UI properly
+            // 2. Reset all game systems
+            playerBehaviour.ResetPlayer();
+            playerBehaviour.ResetAllNPCs();
+            playerBehaviour.ResetAllCoins();
+
+            // 3. Force refresh CollectibleManager UI
+            CollectibleManager manager = FindAnyObjectByType<CollectibleManager>();
+            if (manager != null)
+            {
+                manager.ResetCollectibles(); // This will update the UI automatically
+            }
+
+            // 4. UI Cleanup
+            HideGameOverPanel();
             if (panel != null) panel.SetActive(false);
             if (okayButton != null) okayButton.SetActive(false);
             if (missionButton != null) missionButton.SetActive(true);
-            if (scoreText != null) scoreText.enabled = true;
+            if (collectibleCountText != null)
+            {
+                collectibleCountText.enabled = true;
+            }
+
+            // 5. Reactive UI elements
+            if (scoreText != null)
+            {
+                scoreText.enabled = true;
+                UpdateScoreDisplay(0); // Explicitly reset score display
+            }
+
             if (timeText != null) timeText.enabled = true;
 
+            // 6. Health UI
             if (healthTrackingIcon != null)
             {
                 healthTrackingIcon.gameObject.SetActive(true);
                 healthTrackingIcon.enabled = true;
-                UpdateHealthSprite(playerBehaviour.currentHealth);
+                UpdateHealthSprite(playerBehaviour.maxHealth); // Reset to full health
             }
 
-            // Switch back to normal BGM
+            // 7. Audio reset
             if (bgmAudioSource != null && normalBGMClip != null)
             {
                 bgmAudioSource.Stop();
                 bgmAudioSource.clip = normalBGMClip;
                 bgmAudioSource.Play();
-                Debug.Log("Normal BGM restarted after respawn.");
             }
 
+            // 8. Camera reset
             if (cameraSwitcher != null)
                 cameraSwitcher.SwitchToPlayerCamera();
 
-            Debug.Log("Player has respawned!");
+            Debug.Log("Game fully reset!");
         }
         else
         {
-            Debug.LogWarning("Player or spawn point is missing, restarting scene instead...");
+            Debug.LogWarning("Critical references missing - reloading scene...");
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
+
+        // Reset cursor state (good practice)
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
+    public void ShowInteractPrompt(bool show)
+    {
+        if (interactPromptUI != null)
+        {
+            interactPromptUI.SetActive(show);
+        }
+        else
+        {
+            Debug.LogWarning("InteractPromptUI GameObject not assigned in PanelToggle!");
+        }
+    }
+    public void UpdateCollectibleUI(int collected, int total)
+    {
+        if (collectibleCountText != null)
+        {
+            // HARDCODE the total to 40 - ignore the 'total' parameter completely
+            collectibleCountText.text = $"COLLECTED: {collected}/40";
 
+            if (congratsPanel != null)
+            {
+                bool allCollected = collected >= 40;
+                congratsPanel.SetActive(allCollected);
 
-}
+                if (allCollected)
+                {
+                    StopTheftTimer();
+                    PlayCongratsBGM();
+                }
+            }
+
+            Debug.Log($"UI Updated: {collected}/40 (Ignored parameter total: {total})");
+        }
+    }
+    public void ShowMessage()
+    {
+        if (messagePanel != null)
+        {
+            messagePanel.SetActive(true);
+            Invoke("HideMessage", displayTime);
+        }
+    }
+    private void HideMessage()
+    {
+        if (messagePanel != null)
+        {
+            messagePanel.SetActive(false);
+        }
+    }
+    private void PlayCongratsBGM()
+    {
+        if (bgmAudioSource != null)
+        {
+            bgmAudioSource.Stop(); // Stop any current BGM
+            bgmAudioSource.clip = congratsBGM;
+
+            if (congratsBGM != null)
+            {
+                bgmAudioSource.Play();
+                Debug.Log("Playing Congrats BGM.");
+            }
+            else
+            {
+                Debug.LogWarning("Congrats BGM clip is missing!");
+            }
+        }
+    }
 
 }
